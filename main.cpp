@@ -10,17 +10,18 @@ int main()
     return 0;
 }
 
-double** init_matrix(unsigned int size)
+double** init_matrix(unsigned int dim)
 {
-    double** array = new double*[size];
-    for (unsigned int i = 0; i<size; i++)
+    double** array = new double*[dim];
+    for (unsigned int i = 0; i<dim; i++)
     {
-        array[i] = new double[size];
+        array[i] = new double[dim];
         
         // Initialize elements to zero
-        for (unsigned int j = 0; j<size; j++)
+        for (unsigned int j = 0; j<dim; j++)
             array[i][j] = 0;
     }
     
     return array;
 }
+
