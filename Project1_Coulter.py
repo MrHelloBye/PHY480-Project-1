@@ -2,23 +2,23 @@ from __future__ import print_function, division
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
-from scipy.optimize import curve_fit
+import scipy.linalg as linalg
 import pandas as pd
 import time
 
 
 def TriSolve(a,b,c,f,dim):
     u = np.zeros(dim)
-    for i in range(1, len(b)):
+    for i in range(1, dim):
         b[i] -= a[i]*c[i-1]/b[i-1]
         f[i] -= a[i]*f[i-1]/b[i-1]
     u[-1] = f[-1]/b[-1]
-    for i in range(len(u)-1,0,-1):
+    for i in range(dim-1,0,-1):
         u[i-1] = (f[i-1] - c[i-1]*u[i])/b[i-1]
     return u
 
 def main():
-    dim = 10
+    dim = 15000
     h = 1/dim
     matrix = np.zeros((dim,dim))
     a = -np.ones(dim)
@@ -40,13 +40,29 @@ def main():
         
     #eigval, eigvec = np.linalg.eig(matrix)
     #print(eigval)
-        
-    expected = np.linalg.solve(matrix, f)
-    print("Expected: ", expected)
-        
+    
+    t0 = time.time()
+    expected1 = np.linalg.solve(matrix, f)
+#    print("Expected: ", expected1, "\n")
+    t1 = time.time()
+    total = t1-t0
+    print("Numpy linalg time: ", total, "\n")
+    
+    t0 = time.time()
+    LU = linalg.lu_factor(matrix)
+    x = linalg.lu_solve(LU, f)
+#    print("LU: ", x, "\n")
+    t1 = time.time()
+    total = t1-t0
+    print("Scipy LU time: ", total, "\n")
+    
+    t0 = time.time()    
     calculated = TriSolve(a,b,c,f,dim)
-    print("Calculated: ", calculated)
+#    print("Calculated: ", calculated)
+    t1 = time.time()
+    total = t1-t0
+    print("Our code time: ", total, "\n")
 
-    print(np.isclose(expected,calculated))
+#    print(np.isclose(expected1,calculated))
 
 main()
