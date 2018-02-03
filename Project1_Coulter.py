@@ -4,10 +4,11 @@ import matplotlib.pyplot as plt
 import csv
 from scipy.optimize import curve_fit
 import pandas as pd
+import time
 
 
-def TriSolve(a,b,c,f):
-    u = np.array([0.0,0.0,0.0,0.0])
+def TriSolve(a,b,c,f,dim):
+    u = np.zeros(dim)
     for i in range(1, len(b)):
         b[i] -= a[i]*c[i-1]/b[i-1]
         f[i] -= a[i]*f[i-1]/b[i-1]
@@ -17,28 +18,35 @@ def TriSolve(a,b,c,f):
     return u
 
 def main():
-    dim=4
+    dim = 10
+    h = 1/dim
     matrix = np.zeros((dim,dim))
-    a = np.array([0.0,2.0,2.0,2.0])
-    b = np.array([3.0,3.0,3.0,3.0])
-    c = np.array([1.0,1.0,1.0,0.0])
-    f = np.array([1.0,2.0,3.0,4.0])
+    a = -np.ones(dim)
+    a[0] = 0
+    b = 2*np.ones(dim)
+    c = -np.ones(dim)
+    c[-1] = 0    
+    f = np.ones(dim)
+    j = 0
+    while j <= dim-1:
+        f[j] = 100*np.exp(-10*j*h)*h**2
+        j += 1
     for x in range(0, dim):
-        matrix[x][x] = 3.0
+        matrix[x][x] = 2.0
     for x in range(1, dim):
-        matrix[x][x-1] = 2.0  
+        matrix[x][x-1] = -1.0  
     for x in range(0, dim-1):
-        matrix[x][x+1] = 1.0
+        matrix[x][x+1] = -1.0
         
-    eigval, eigvec = np.linalg.eig(matrix)
-    print(eigval)
-    print(eigvec)
+    #eigval, eigvec = np.linalg.eig(matrix)
+    #print(eigval)
         
     expected = np.linalg.solve(matrix, f)
     print("Expected: ", expected)
         
-    calculated = TriSolve(a,b,c,f)
+    calculated = TriSolve(a,b,c,f,dim)
     print("Calculated: ", calculated)
 
-    
+    print(np.isclose(expected,calculated))
+
 main()
