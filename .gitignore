@@ -1,1 +1,5 @@
 *.x
+*.plist
+matrix.dSYM
+.DS_Store
+*.pdf

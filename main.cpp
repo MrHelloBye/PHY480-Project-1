@@ -1,39 +1,135 @@
 #include <cstdio>
+#include <cmath>
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xarray.hpp"
 #include "xtensor/xmath.hpp"
 #include "xtensor/xio.hpp"
+#include "xtensor/xeval.hpp"
+#include <chrono>
+#include <algorithm>
 
-void populate_matrix(double**, int);
+#include <time.h>
+double get_cpu_time()
+{
+    return (double)clock() / CLOCKS_PER_SEC;
+}
 
+using namespace std;
+using namespace xt;
+
+double error(xtensor<double,1>&, xtensor<double,1>&);
+void tridiag_sym(xtensor<double,1>, xtensor<double,1>, xtensor<double,1>&);
 
 int main()
 {
-    //Initialize tridiagonal symmetrix matrix equation
-    unsigned int dim = 5;
+    int n = 100000000-2;
     
-    xt::xarray<double> diag = xt::ones<double>({dim});
-    xt::xarray<double> upper_diag = xt::ones<double>({dim-1});
+    xtensor<double, 1> alpha = ones<double>({n});
+    xtensor<double, 1> beta = ones<double>({n-1});
+    xtensor<double, 1> b = zeros<double>({n});
+    xtensor<double, 1> analyt = ones<double>({n});
     
-    xt::xarray<double> condition_vector = xt::zeros<double>({dim});
-    xt::xarray<double> solution_vector = xt::zeros<double>({dim});
+    alpha *= 2;
+    beta *= -1;
     
-    // Solve matrix equation
-    xt::xarray<double> *thing = new xt::xarray<double>;
     
+    double N = static_cast<double>(n);
+    double j = 0;
+    for (unsigned long i = 0; i<n; i++)
+    {
+        j = static_cast<double>(i);
+        b.at(i) = 100*exp(-10*j/N);
+        analyt.at(i) = 1-(1-exp(-10))*j/N-exp(-10*j/N);
+    }
+    
+    
+    /* ----- Data output ----- */
+    
+    FILE *fp = fopen("analyt.tsv","w");
+    int mod = 1000;
+    
+    for(unsigned long i = 0; i<n; i++)
+    {
+        if (!(i%mod))
+            fprintf(fp, "%f\n", analyt.at(i)); 
+    }
+    
+    fclose(fp);
+    
+    
+    
+    
+    
+    
+    double t1 = get_cpu_time();
+    
+    tridiag_sym(alpha, beta, b);
+    b /= (n+2);
+    b /= (n+2);
+    
+    double t2 = get_cpu_time();
+    
+    printf("It took me %f seconds, with %f error.",t2-t1,error(b,analyt));
+    std::cout << std::endl;
+    
+    /* ----- Data output ----- */
+    
+    fp = fopen("solution.tsv","w");
+    mod = 1000;
+    
+    for(unsigned long i = 0; i<n; i++)
+    {
+        if (!(i%mod))
+            fprintf(fp, "%f\n", b.at(i)); 
+    }
+    
+    fclose(fp);
     return 0;
 }
 
-void populate_matrix(double** array, int dim)
+
+double error(xtensor<double,1> &approx, xtensor<double,1>&analyt)
 {
-    for (int i = 0; i<dim; i++)
+    const unsigned long n = approx.shape()[0];
+    if (n != analyt.shape()[0])
+        throw "Vector sizes are different.";
+    
+    xtensor<double, 1> errors = zeros<double>({n});
+    
+    for (unsigned long i = 0; i<n; i++)
     {
-        for (int j = 0; j<dim; j++)
-        {
-            if (i==j)
-                array[i][j] = 2;
-            else if (i==j+1 || i==j-1)
-                array[i][j] = -1;
-        }
+        errors.at(i) = fabs(approx.at(i)-analyt.at(i))/analyt.at(i);
     }
+    
+    return *max_element(errors.begin(),errors.end());
+}
+
+
+void tridiag_sym(xtensor<double, 1> alpha,
+    xtensor<double, 1> beta, xtensor<double, 1> &b)
+{
+    unsigned long n = alpha.shape()[0];
+    
+    auto temp = beta.at(0);
+    
+    for (unsigned int k = 1; k<n; k++)
+    {
+        temp = beta.at(k-1);
+        beta.at(k-1) = temp/alpha.at(k-1);
+        alpha.at(k) -= temp*beta.at(k-1);
+    }
+    
+    for (unsigned long k = 1; k<n; k++)
+    {
+        b.at(k) -= beta.at(k-1)*b.at(k-1);
+    }
+    
+    b.at(n-1) /= alpha.at(n-1);
+    
+    for (unsigned long k = n-2; k>0; k--)
+    {
+        b.at(k) = b.at(k)/alpha.at(k) - beta.at(k)*b.at(k+1);
+    }
+    
+    
 }
