@@ -3,3 +3,5 @@
 matrix.dSYM
 .DS_Store
 *.pdf
+*.tsv
+
