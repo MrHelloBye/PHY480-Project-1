@@ -18,7 +18,7 @@ def TriSolve(a,b,c,f,dim):
     return u
 
 def main():
-    dim = 15000
+    dim = 5000
     h = 1/dim
     matrix = np.zeros((dim,dim))
     a = -np.ones(dim)
@@ -38,8 +38,8 @@ def main():
     for x in range(0, dim-1):
         matrix[x][x+1] = -1.0
         
-    #eigval, eigvec = np.linalg.eig(matrix)
-    #print(eigval)
+#    eigval, eigvec = np.linalg.eig(matrix)
+#    print(eigval)
     
     t0 = time.time()
     expected1 = np.linalg.solve(matrix, f)
