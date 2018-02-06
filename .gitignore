@@ -2,7 +2,6 @@
 *.plist
 matrix.dSYM
 .DS_Store
-*.pdf
 *.tsv
 *.pyc
 matrix
