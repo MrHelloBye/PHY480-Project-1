@@ -22,7 +22,7 @@ void tridiag_sym(xtensor<double,1>, xtensor<double,1>, xtensor<double,1>&);
 
 int main()
 {
-    int n = 100000000-2;
+    int n = 10000;
     
     xtensor<double, 1> alpha = ones<double>({n});
     xtensor<double, 1> beta = ones<double>({n-1});
@@ -39,27 +39,7 @@ int main()
     {
         j = static_cast<double>(i);
         b.at(i) = 100*exp(-10*j/N);
-        analyt.at(i) = 1-(1-exp(-10))*j/N-exp(-10*j/N);
     }
-    
-    
-    /* ----- Data output ----- */
-    
-    FILE *fp = fopen("analyt.tsv","w");
-    int mod = 1000;
-    
-    for(unsigned long i = 0; i<n; i++)
-    {
-        if (!(i%mod))
-            fprintf(fp, "%f\n", analyt.at(i)); 
-    }
-    
-    fclose(fp);
-    
-    
-    
-    
-    
     
     double t1 = get_cpu_time();
     
@@ -69,13 +49,12 @@ int main()
     
     double t2 = get_cpu_time();
     
-    printf("It took me %f seconds, with %f error.",t2-t1,error(b,analyt));
-    std::cout << std::endl;
+    printf("It took me %f seconds.\n",t2-t1);
     
     /* ----- Data output ----- */
     
-    fp = fopen("solution.tsv","w");
-    mod = 1000;
+    FILE *fp = fopen("solution.tsv","w");
+    int mod = 1000;
     
     for(unsigned long i = 0; i<n; i++)
     {
@@ -103,7 +82,6 @@ double error(xtensor<double,1> &approx, xtensor<double,1>&analyt)
     
     return *max_element(errors.begin(),errors.end());
 }
-
 
 void tridiag_sym(xtensor<double, 1> alpha,
     xtensor<double, 1> beta, xtensor<double, 1> &b)
